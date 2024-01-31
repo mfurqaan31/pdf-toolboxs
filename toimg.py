@@ -1,4 +1,4 @@
-# getting stored in downloads
+# getting stored in downloads and need to delete uploads dir
 import streamlit as st
 import fitz
 from PIL import Image
@@ -52,11 +52,12 @@ def main():
         check_encrypted(pdf_file_path)
 
         zip_filename = st.text_input("Enter the ZIP file name with extension:", "output.zip", key="zip_filename")
-        
+
         # Check if the user has selected a PDF and entered a ZIP file name
         if uploaded_file and zip_filename:
             # Trigger the conversion when the button is clicked
             if st.button("Convert to ZIP"):
+                st.success(f"The PDF converted to images, and the ZIP file is ready for download.")
                 zip_data = convert_pdf_to_zip(pdf_file_path)
                 st.download_button(
                     label="Download ZIP",
@@ -64,7 +65,7 @@ def main():
                     file_name=zip_filename,
                     key="download_zip_button"
                 )
-                st.success(f"The PDF converted to images, and the ZIP file is ready for download.")
+                
 
 if __name__ == "__main__":
     main()
