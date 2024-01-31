@@ -57,7 +57,7 @@ def main():
         if uploaded_file and zip_filename:
             # Trigger the conversion when the button is clicked
             if st.button("Convert to ZIP"):
-                st.success(f"The PDF converted to images, and the ZIP file is ready for download.")
+                st.success(f"The PDF has been converted to images, and the ZIP file is ready for Download.")
                 zip_data = convert_pdf_to_zip(pdf_file_path)
                 st.download_button(
                     label="Download ZIP",
