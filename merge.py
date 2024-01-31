@@ -1,4 +1,5 @@
 # this skips all the encrypted pdfs
+# multiple pdfs cant be merged fix it
 import streamlit as st
 from streamlit_sortables import sort_items
 import fitz
