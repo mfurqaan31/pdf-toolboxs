@@ -1,5 +1,5 @@
 # this skips all the encrypted pdfs
-# multiple pdfs cant be merged fix it
+# multiple same pdfs cant be merged fix this
 import streamlit as st
 from streamlit_sortables import sort_items
 import fitz
@@ -46,13 +46,15 @@ def main():
         pdf_writer.save(merged_pdf_io)
         pdf_writer.close()
 
+        st.success("The PDFs has been merged, and it is ready for download.")
         # Display a download button for the merged PDF
         st.download_button(
-            label="Download Merged PDF",
+            label="Download PDF",
             data=merged_pdf_io.getvalue(),
             file_name=output_pdf_name,
             key="merged_pdf_button"
         )
+        
 
     # Create a button to add PDF files
     uploaded_files = st.file_uploader("Add PDF files", type="pdf", accept_multiple_files=True)
