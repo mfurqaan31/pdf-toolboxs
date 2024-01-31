@@ -6,7 +6,7 @@ import io
 
 def main():
     
-    st.title("PDF File Uploader")
+    st.title("Merge PDFs")
     
     def is_encrypted(pdf_bytes):
         try:
@@ -18,7 +18,7 @@ def main():
             st.error(f"Error checking encryption status: {e}")
             return True  # Assume encrypted in case of an error
 
-    def merge_pdf(uploaded_files, reordered_names):
+    def merge_pdf(uploaded_files, reordered_names, output_pdf_name):
         # Create a PDF writer object
         pdf_writer = fitz.open()
 
@@ -31,7 +31,7 @@ def main():
             pdf_bytes = [file.read() for file in uploaded_files if file.name == pdf_path][0]
             
             if is_encrypted(pdf_bytes):
-                st.warning(f"Skipping encrypted PDF: {pdf_path}")
+                st.warning(f"{pdf_path}"+" is encrypted, hence will not be considered for merging")
                 continue
 
             # Insert the PDF pages into the PDF writer
@@ -49,7 +49,7 @@ def main():
         st.download_button(
             label="Download Merged PDF",
             data=merged_pdf_io.getvalue(),
-            file_name="merged_pdf.pdf",
+            file_name=output_pdf_name,
             key="merged_pdf_button"
         )
 
@@ -63,14 +63,17 @@ def main():
         file_names = [file.name for file in uploaded_files]
         st.write("Arrange the order of the pdf")
         reordered_names = sort_items(file_names)
-        st.write("Uploaded PDF Files:")
+        st.write("Order for the uploaded PDF files:")
         
         # Display the names with the selected order
         for index, name in enumerate(reordered_names):
             st.write(f"{index + 1}. {name}")
         
+        # Allow the user to enter the name of the output PDF
+        output_pdf_name = st.text_input("Enter the name of the output PDF file (without extension):", "merged_pdf")
+
         if st.button("Merge Pdfs"):
-            merge_pdf(uploaded_files, reordered_names)
+            merge_pdf(uploaded_files, reordered_names, f"{output_pdf_name}.pdf")
 
 if __name__ == "__main__":
     main()
