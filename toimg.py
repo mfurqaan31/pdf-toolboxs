@@ -1,4 +1,3 @@
-# getting stored in downloads and need to delete uploads dir
 import streamlit as st
 import fitz
 from PIL import Image
@@ -6,6 +5,8 @@ import zipfile
 from io import BytesIO
 import PyPDF2
 import os
+import shutil
+import atexit
 
 def check_encrypted(pdf_file_path):
     is_encrypted = False
@@ -37,6 +38,10 @@ def convert_pdf_to_zip(pdf_file_path):
     # Return the bytes of the generated ZIP file
     return zip_buffer.getvalue()
 
+def remove_uploads_folder():
+    # Remove the "uploads" folder when the program exits
+    shutil.rmtree("uploads", ignore_errors=True)
+
 def main():
     st.title("PDF to Image Converter")
 
@@ -65,7 +70,8 @@ def main():
                     file_name=zip_filename,
                     key="download_zip_button"
                 )
-                
 
 if __name__ == "__main__":
+    # Register the function to remove "uploads" folder when the program exits
+    atexit.register(remove_uploads_folder)
     main()
