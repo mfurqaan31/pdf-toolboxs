@@ -1,3 +1,4 @@
+# check encryption
 import os
 import atexit
 import shutil
@@ -5,6 +6,16 @@ import streamlit as st
 import PyPDF2
 import zipfile
 from io import BytesIO
+
+def check_encrypted(pdf_file_path):
+    is_encrypted = False
+    with open(pdf_file_path, 'rb') as pdf_file:
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        is_encrypted = pdf_reader.is_encrypted
+
+    if is_encrypted:
+        st.error("The selected PDF is encrypted. Cannot convert to images.")
+        st.stop()
 
 def cleanup():
     # Delete 'uploads' folder when the application exits
@@ -39,9 +50,12 @@ def main():
     if uploaded_file is not None:
         # Save the uploaded file to the 'uploads' folder
         pdf_path = os.path.join("uploads", uploaded_file.name)
+
         os.makedirs("uploads", exist_ok=True)
         with open(pdf_path, 'wb') as pdf_file:
             pdf_file.write(uploaded_file.getvalue())
+
+        check_encrypted(pdf_path)
 
         # Initialize total_pages here
         pdf_reader = PyPDF2.PdfReader(pdf_path)
