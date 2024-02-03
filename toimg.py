@@ -1,84 +1,83 @@
-import os
-import atexit
-import shutil
 import streamlit as st
-import PyPDF2
+import fitz
+from PIL import Image
 import zipfile
 from io import BytesIO
+import PyPDF2
+import os
+import shutil
+import atexit
 
-filename=""
+def check_encrypted(pdf_file_path):
+    is_encrypted = False
+    with open(pdf_file_path, 'rb') as pdf_file:
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        is_encrypted = pdf_reader.is_encrypted
 
-def cleanup():
-    # Delete 'uploads' folder when the application exits
+    if is_encrypted:
+        st.error("The selected PDF is encrypted. Cannot convert to images.")
+        st.stop()
+
+def convert_pdf_to_zip(pdf_file_path):
+    pdf_document = fitz.open(pdf_file_path)
+
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+        for page_number in range(len(pdf_document)):
+            page = pdf_document[page_number]
+            image_list = page.get_pixmap()
+
+            pil_image = Image.frombytes("RGB", [image_list.width, image_list.height], image_list.samples)
+
+            image_filename = f"page_{page_number + 1}.png"
+            with BytesIO() as image_bytes:
+                pil_image.save(image_bytes, format="PNG")
+                image_data = image_bytes.getvalue()
+                zip_file.writestr(image_filename, image_data)
+
+    # Return the bytes of the generated ZIP file
+    return zip_buffer.getvalue()
+
+def remove_uploads_folder():
+    # Remove the "uploads" folder when the program exits
     shutil.rmtree("uploads", ignore_errors=True)
 
-def split_pdf(pdf_path, page_ranges):
-    pdf_file = open(pdf_path, 'rb')
-    pdf_reader = PyPDF2.PdfReader(pdf_file)
-    total_pages = len(pdf_reader.pages)
-
-    split_pdfs = []
-    for start, end in page_ranges:
-        start = max(1, start)  # Ensure start is not less than 1
-        end = min(total_pages, end)  # Ensure end is not greater than total pages
-
-        pdf_writer = PyPDF2.PdfWriter()  # Use PdfWriter instead of PdfFileWriter
-        for page_num in range(start - 1, end):
-            pdf_writer.add_page(pdf_reader.pages[page_num])
-
-        split_pdf_bytes = BytesIO()
-        pdf_writer.write(split_pdf_bytes)
-        split_pdfs.append(split_pdf_bytes)
-
-    pdf_file.close()
-    return split_pdfs
-
 def main():
-    st.title("PDF Page Splitter")
+    st.title("PDF to Image Converter")
 
-    uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
+    uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
-    if uploaded_file is not None:
-        # Save the uploaded file to the 'uploads' folder
-        pdf_path = os.path.join("uploads", uploaded_file.name)
+    if uploaded_file:
+        pdf_file_path = os.path.join("uploads", uploaded_file.name)
         os.makedirs("uploads", exist_ok=True)
-        with open(pdf_path, 'wb') as pdf_file:
-            pdf_file.write(uploaded_file.getvalue())
 
-        # Initialize total_pages here
-        pdf_reader = PyPDF2.PdfReader(pdf_path)
-        total_pages = len(pdf_reader.pages)
+        with open(pdf_file_path, 'wb') as pdf_file:
+            pdf_file.write(uploaded_file.read())
 
-        page_ranges = st.text_input("Enter page ranges (e.g., 1-3, 4-6):")
-        zip_filename = st.text_input("Enter the desired name for the zip file (without extension):")
+        check_encrypted(pdf_file_path)
 
-        if page_ranges.strip() and zip_filename.strip():  # Check if the inputs are not empty
-            try:
-                ranges = [list(map(int, rng.split('-'))) for rng in page_ranges.split(',')]
-                if all(1 <= start <= end <= total_pages for start, end in ranges):
-                    if st.button("Split PDF"):
-                        split_pdfs = split_pdf(pdf_path, ranges)
-                        
-                        # Create a zip file with the user-specified name
-                        zip_filename_with_extension = f"{zip_filename}.zip"
-                        filename=zip_filename_with_extension
-                        with zipfile.ZipFile(zip_filename_with_extension, 'w') as zip_file:
-                            for i, pdf_bytes in enumerate(split_pdfs):
-                                pdf_filename = f"split_pdf_{i + 1}.pdf"
-                                zip_file.writestr(pdf_filename, pdf_bytes.getvalue())
+        zip_filename = st.text_input("Enter the ZIP file name (without extension):", "output", key="zip_filename")
 
-                        # Provide a single download button for the zip file
-                        st.markdown(f"**Download Split PDFs**")
-                        st.download_button(label="Download Zip File", data=open(zip_filename_with_extension, 'rb').read(), file_name=zip_filename_with_extension)
+        # Check if the user has selected a PDF and entered a ZIP file name
+        if uploaded_file and zip_filename:
+            zip_filename = zip_filename.strip()  # Remove leading/trailing spaces
 
-                else:
-                    st.warning("Invalid page range. Make sure all ranges are in the correct format and within the total number of pages.")
+            # Add ".zip" extension if not provided
+            if not zip_filename.endswith(".zip"):
+                zip_filename += ".zip"
 
-            except ValueError:
-                st.warning("Invalid page range format. Please use the format 'start-end, start-end'")
-        else:
-            st.warning("Please enter page ranges and a zip file name before splitting.")
+            # Trigger the conversion when the button is clicked
+            if st.button("Convert to ZIP"):
+                st.success(f"The PDF has been converted to images, and the ZIP file is ready for Download.")
+                zip_data = convert_pdf_to_zip(pdf_file_path)
+                st.download_button(
+                    label="Download ZIP",
+                    data=zip_data,
+                    file_name=zip_filename,
+                    key="download_zip_button"
+                )
 
 if __name__ == "__main__":
-    atexit.register(cleanup)
+    # Register the function to remove "uploads" folder when the program exits
+    atexit.register(remove_uploads_folder)
     main()
