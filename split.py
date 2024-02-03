@@ -1,4 +1,3 @@
-# downloads zip file
 import os
 import atexit
 import shutil
@@ -18,14 +17,16 @@ def split_pdf(pdf_path, page_ranges):
 
     split_pdfs = []
     for start, end in page_ranges:
-        if 1 <= start <= end <= total_pages:
-            pdf_writer = PyPDF2.PdfWriter()  # Use PdfWriter instead of PdfFileWriter
-            for page_num in range(start - 1, end):
-                pdf_writer.add_page(pdf_reader.pages[page_num])
+        start = max(1, start)  # Ensure start is not less than 1
+        end = min(total_pages, end)  # Ensure end is not greater than total pages
 
-            split_pdf_bytes = BytesIO()
-            pdf_writer.write(split_pdf_bytes)
-            split_pdfs.append(split_pdf_bytes)
+        pdf_writer = PyPDF2.PdfWriter()  # Use PdfWriter instead of PdfFileWriter
+        for page_num in range(start - 1, end):
+            pdf_writer.add_page(pdf_reader.pages[page_num])
+
+        split_pdf_bytes = BytesIO()
+        pdf_writer.write(split_pdf_bytes)
+        split_pdfs.append(split_pdf_bytes)
 
     pdf_file.close()
     return split_pdfs
@@ -42,30 +43,38 @@ def main():
         with open(pdf_path, 'wb') as pdf_file:
             pdf_file.write(uploaded_file.getvalue())
 
-        page_ranges = st.text_input("Enter page ranges (e.g., 1-3, 4-6):")
+        # Initialize total_pages here
+        pdf_reader = PyPDF2.PdfReader(pdf_path)
+        total_pages = len(pdf_reader.pages)
 
-        if page_ranges.strip():  # Check if the input is not empty
+        page_ranges = st.text_input("Enter page ranges (e.g., 1-3, 4-6):")
+        zip_filename = st.text_input("Enter the desired name for the zip file (without extension):")
+
+        if page_ranges.strip() and zip_filename.strip():  # Check if the inputs are not empty
             try:
                 ranges = [list(map(int, rng.split('-'))) for rng in page_ranges.split(',')]
+                if all(1 <= start <= end <= total_pages for start, end in ranges):
+                    if st.button("Split PDF"):
+                        split_pdfs = split_pdf(pdf_path, ranges)
 
-                if st.button("Split PDF"):
-                    split_pdfs = split_pdf(pdf_path, ranges)
-                    
-                    # Create a zip file to store all split PDFs
-                    zip_filename = "split_pdfs.zip"
-                    with zipfile.ZipFile(zip_filename, 'w') as zip_file:
-                        for i, pdf_bytes in enumerate(split_pdfs):
-                            pdf_filename = f"split_pdf_{i + 1}.pdf"
-                            zip_file.writestr(pdf_filename, pdf_bytes.getvalue())
+                        # Create a zip file with the user-specified name in the 'uploads' directory
+                        zip_filename_with_extension = os.path.join("uploads", f"{zip_filename}.zip")
+                        with zipfile.ZipFile(zip_filename_with_extension, 'w') as zip_file:
+                            for i, pdf_bytes in enumerate(split_pdfs):
+                                pdf_filename = f"split_pdf_{i + 1}.pdf"
+                                zip_file.writestr(pdf_filename, pdf_bytes.getvalue())
 
-                    # Provide a single download button for the zip file
-                    st.markdown(f"**Download Split PDFs**")
-                    st.download_button(label="Download Zip File", data=open(zip_filename, 'rb').read(), file_name=zip_filename)
+                        # Provide a single download button for the zip file
+                        st.success(f"The PDFs have been split, and the ZIP file is ready for Download.")
+                        st.download_button(label=f"Download {zip_filename}.zip", data=open(zip_filename_with_extension, 'rb').read(), file_name=f"{zip_filename}.zip")
+
+                else:
+                    st.warning("Invalid page range. Make sure all ranges are in the correct format and within the total number of pages.")
 
             except ValueError:
-                st.error("Invalid page range format. Please use the format 'start-end, start-end'")
+                st.warning("Invalid page range format. Please use the format 'start-end, start-end'")
         else:
-            st.warning("Please enter page ranges before splitting.")
+            st.warning("Please enter page ranges and a zip file name before splitting.")
 
 if __name__ == "__main__":
     atexit.register(cleanup)
