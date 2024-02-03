@@ -1,4 +1,4 @@
-# check encryption
+# checks if encrypted
 import os
 import atexit
 import shutil
