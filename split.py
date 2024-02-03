@@ -1,9 +1,10 @@
-# gives manu download buttons
+# downloads zip file
 import os
 import atexit
 import shutil
 import streamlit as st
 import PyPDF2
+import zipfile
 from io import BytesIO
 
 def cleanup():
@@ -46,13 +47,20 @@ def main():
         if page_ranges.strip():  # Check if the input is not empty
             try:
                 ranges = [list(map(int, rng.split('-'))) for rng in page_ranges.split(',')]
-                
+
                 if st.button("Split PDF"):
                     split_pdfs = split_pdf(pdf_path, ranges)
+                    
+                    # Create a zip file to store all split PDFs
+                    zip_filename = "split_pdfs.zip"
+                    with zipfile.ZipFile(zip_filename, 'w') as zip_file:
+                        for i, pdf_bytes in enumerate(split_pdfs):
+                            pdf_filename = f"split_pdf_{i + 1}.pdf"
+                            zip_file.writestr(pdf_filename, pdf_bytes.getvalue())
 
-                    for i, pdf_bytes in enumerate(split_pdfs):
-                        st.markdown(f"**Download Split PDF {i + 1}**")
-                        st.download_button(label=f"Split PDF {i + 1}", data=pdf_bytes, file_name=f"split_pdf_{i + 1}.pdf")
+                    # Provide a single download button for the zip file
+                    st.markdown(f"**Download Split PDFs**")
+                    st.download_button(label="Download Zip File", data=open(zip_filename, 'rb').read(), file_name=zip_filename)
 
             except ValueError:
                 st.error("Invalid page range format. Please use the format 'start-end, start-end'")
