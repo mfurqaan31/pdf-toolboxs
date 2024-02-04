@@ -18,13 +18,17 @@ def display_pdf_page(uploaded_file, page_number):
         else:
             st.write("Error converting PDF to image.")
 
-# Upload PDF file
-uploaded_file = st.file_uploader("Upload PDF", type=["pdf"])
+def main():
+    st.title("Edit PDF")
+    # Upload PDF file
+    uploaded_file = st.file_uploader("Upload PDF", type=["pdf"])
 
-# Choose the page to display
-page_number = st.number_input("Enter page number", min_value=1, value=1)
+    if uploaded_file is not None:
+        # Choose the page to display
+        page_number = st.number_input("Enter page number", min_value=1, value=1)
+        display_pdf_page(uploaded_file, page_number)
+    else:
+        st.write("Please upload a PDF file.")
 
-if uploaded_file is not None:
-    display_pdf_page(uploaded_file, page_number)
-else:
-    st.write("Please upload a PDF file.")
+if __name__ == "__main__":
+    main()
