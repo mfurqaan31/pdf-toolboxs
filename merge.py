@@ -1,4 +1,4 @@
-# fixed the order
+# multiple pdf fixed
 import streamlit as st
 from streamlit_sortables import sort_items
 import fitz
@@ -10,6 +10,35 @@ import atexit
 def remove_uploads_folder():
     # Remove the "uploads" folder when the program exits
     shutil.rmtree("uploads", ignore_errors=True)
+
+def save_uploaded_files(uploaded_files):
+    uploaded_paths = []
+    
+    # Create the 'uploads' directory if it doesn't exist
+    if not os.path.exists("uploads"):
+        os.makedirs("uploads")
+
+    # Keep track of the occurrences of each filename
+    filename_occurrences = {}
+
+    for uploaded_file in uploaded_files:
+        # Get the base filename without extension
+        base_filename, file_extension = os.path.splitext(uploaded_file.name)
+        
+        # Determine the numerical suffix for subsequent occurrences
+        if base_filename not in filename_occurrences:
+            filename_occurrences[base_filename] = 0
+            new_filename = base_filename
+        else:
+            filename_occurrences[base_filename] += 1
+            new_filename = f"{base_filename}({filename_occurrences[base_filename]})"
+
+        file_path = os.path.join("uploads", new_filename + file_extension)
+        
+        with open(file_path, "wb") as f:
+            f.write(uploaded_file.read())
+        uploaded_paths.append(file_path)
+    return uploaded_paths
 
 def main():
 
@@ -24,20 +53,6 @@ def main():
         except Exception as e:
             st.error(f"Error checking encryption status: {e}")
             return True  # Assume encrypted in case of an error
-
-    def save_uploaded_files(uploaded_files):
-        uploaded_paths = []
-        
-        # Create the 'uploads' directory if it doesn't exist
-        if not os.path.exists("uploads"):
-            os.makedirs("uploads")
-
-        for uploaded_file in uploaded_files:
-            file_path = os.path.join("uploads", uploaded_file.name)
-            with open(file_path, "wb") as f:
-                f.write(uploaded_file.read())
-            uploaded_paths.append(file_path)
-        return uploaded_paths
 
     def merge_pdf(uploaded_paths, reordered_names, output_pdf_name):
         pdf_writer = fitz.open()
