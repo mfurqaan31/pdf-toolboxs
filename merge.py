@@ -1,4 +1,4 @@
-# multiple pdfs can be merged
+# fixed the order
 import streamlit as st
 from streamlit_sortables import sort_items
 import fitz
@@ -42,7 +42,9 @@ def main():
     def merge_pdf(uploaded_paths, reordered_names, output_pdf_name):
         pdf_writer = fitz.open()
 
-        for pdf_path in uploaded_paths:
+        for name in reordered_names:
+            index = file_names.index(name)
+            pdf_path = uploaded_paths[index]
             pdf_bytes = open(pdf_path, "rb").read()
 
             if is_encrypted(pdf_bytes):
