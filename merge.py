@@ -63,8 +63,10 @@ def main():
             pdf_bytes = open(pdf_path, "rb").read()
 
             if is_encrypted(pdf_bytes):
-                st.warning(f"{pdf_path}" + " is encrypted, hence will not be considered for merging")
-                continue
+                pdf_path=pdf_path.split("/")[-1]
+                st.warning(f"{pdf_path}" + " is encrypted, hence will not be considered for merging please remove it")
+                st.stop()
+                #continue
 
             try:
                 pdf_writer.insert_pdf(fitz.open(stream=pdf_bytes, filetype="pdf"), from_page=0, to_page=-1)
