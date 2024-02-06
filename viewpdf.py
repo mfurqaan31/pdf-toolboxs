@@ -1,3 +1,4 @@
+# has slider
 import streamlit as st
 import io
 from PIL import Image
