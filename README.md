@@ -13,3 +13,5 @@ do not use class and all function must be outside main.
 deploy of azure.
 
 to do: pdf summarizer, unlock pdf, protect pdf.
+
+toimg.py must remove extension if entered in the textbox.
