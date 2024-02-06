@@ -12,4 +12,4 @@ do not use class and all function must be outside main.
 
 deploy of azure.
 
-Add pdf summarizer also very important.
+to do: pdf summarizer, unlock pdf, protect pdf.
