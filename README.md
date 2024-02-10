@@ -14,6 +14,6 @@ deploy of azure.
 
 to do: pdf summarizer, unlock pdf, protect pdf.
 
-toimg.py must remove extension if entered in the textbox.
+must remove extension if entered in the textbox like in splitpdf.py
 
 use this prompt to clean the code `remove extra spaces and lines for better readability.`
