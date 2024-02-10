@@ -1,5 +1,5 @@
 # done: show loading circle even after processing
-# to do print the letters one by one, , include a slider for temperature, ask for the users api
+# to do print the letters one by one, include a slider for temperature, ask for the users api
 
 import streamlit as st
 from PyPDF2 import PdfReader
