@@ -1,5 +1,5 @@
-# done: show loading circle even after processing
-# to do print the letters one by one, include a slider for temperature, ask for the users api
+# done: show loading circle even after processing, slider for llm temperature
+# to do print the letters one by one, ask for the users api
 
 import streamlit as st
 from PyPDF2 import PdfReader
@@ -36,7 +36,7 @@ def get_vector_store(text_chunks):
     vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
     vector_store.save_local("faiss_index")
 
-def get_conversational_chain():
+def get_conversational_chain(temperature):
     prompt_template = """
     Answer the question as detailed as possible from the provided context, make sure to provide all the details, if the answer is not in
     provided context just say, "answer is not available in the context", don't provide the wrong answer\n\n
@@ -45,16 +45,16 @@ def get_conversational_chain():
     Answer:
     """
 
-    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
+    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=temperature)
     prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
     chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
     return chain
 
-def user_input(user_question):
+def user_input(user_question, temperature):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     new_db = FAISS.load_local("faiss_index", embeddings)
     docs = new_db.similarity_search(user_question)
-    chain = get_conversational_chain()
+    chain = get_conversational_chain(temperature)
     st.write("Question: ", user_question)
     with st.spinner("Generating the answer..."):
         response = chain.invoke({"input_documents": docs, "question": user_question}, return_only_outputs=True)
@@ -75,10 +75,10 @@ def main():
         user_question = None
 
         user_question = st.chat_input("Ask your question")
+        temperature = st.slider("Select Gemini LLM temperature", 0.0, 1.0, 0.3, 0.1)
 
         if user_question:
-            user_input(user_question)
-
+            user_input(user_question, temperature)
 
 if __name__ == "__main__":
     main()
