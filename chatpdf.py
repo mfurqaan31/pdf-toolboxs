@@ -55,11 +55,9 @@ def user_input(user_question):
     new_db = FAISS.load_local("faiss_index", embeddings)
     docs = new_db.similarity_search(user_question)
     chain = get_conversational_chain()
-    
+    st.write("Question: ", user_question)
     with st.spinner("Generating the answer..."):
         response = chain.invoke({"input_documents": docs, "question": user_question}, return_only_outputs=True)
-    
-        st.write("Question: ", user_question)
         st.write("Answer: ", response["output_text"])
 
 def main():
