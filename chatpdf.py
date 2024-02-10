@@ -12,11 +12,24 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
-import time
+import atexit
+import shutil
 
 load_dotenv()
 os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+def check_encrypted(pdf_file_path):
+    is_encrypted = False
+    with open(pdf_file_path, 'rb') as pdf_file:
+        pdf_reader = PdfReader(pdf_file)
+        is_encrypted = pdf_reader.is_encrypted
+
+    return is_encrypted
+
+def cleanup():
+    # Delete 'uploads' folder when the application exits
+    shutil.rmtree("uploads", ignore_errors=True)
 
 def get_pdf_text(pdf_docs):
     text = ""
@@ -64,10 +77,24 @@ def main():
     st.set_page_config("Chat PDF")
     st.header("Chat with PDF")
 
+    # Create an "uploads" folder if it doesn't exist
+    if not os.path.exists("uploads"):
+        os.makedirs("uploads")
+
     pdf_doc = st.file_uploader("Upload your PDF File", type=["pdf"])
     if pdf_doc:
+        # Save the uploaded PDF to the uploads folder
+        pdf_path = os.path.join("uploads", pdf_doc.name)
+        with open(pdf_path, "wb") as f:
+            f.write(pdf_doc.getvalue())
+
+        # Check if the uploaded PDF is encrypted
+        if check_encrypted(pdf_path):
+            st.error("The selected PDF is encrypted. Cannot process it.")
+            st.stop()
+
         with st.spinner("Processing..."):
-            raw_text = get_pdf_text([pdf_doc])
+            raw_text = get_pdf_text([pdf_path])
             text_chunks = get_text_chunks(raw_text)
             get_vector_store(text_chunks)
         st.success("PDF Processed Successfully")
@@ -81,4 +108,5 @@ def main():
             user_input(user_question, temperature)
 
 if __name__ == "__main__":
+    atexit.register(cleanup)
     main()
