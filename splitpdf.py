@@ -1,11 +1,11 @@
-# checks if encrypted
+# main code
+import PyPDF2
+import streamlit as st
+from io import BytesIO
 import os
 import atexit
 import shutil
-import streamlit as st
-import PyPDF2
 import zipfile
-from io import BytesIO
 
 def check_encrypted(pdf_file_path):
     is_encrypted = False
@@ -18,7 +18,6 @@ def check_encrypted(pdf_file_path):
         st.stop()
 
 def cleanup():
-    # Delete 'uploads' folder when the application exits
     shutil.rmtree("uploads", ignore_errors=True)
 
 def split_pdf(pdf_path, page_ranges):
@@ -28,8 +27,8 @@ def split_pdf(pdf_path, page_ranges):
 
     split_pdfs = []
     for start, end in page_ranges:
-        start = max(1, start)  # Ensure start is not less than 1
-        end = min(total_pages, end)  # Ensure end is not greater than total pages
+        start = max(1, start)
+        end = min(total_pages, end)
 
         pdf_writer = PyPDF2.PdfWriter()
         for page_num in range(start - 1, end):
@@ -71,9 +70,9 @@ def main():
         total_pages = len(pdf_reader.pages)
 
         page_ranges = st.text_input("Enter page ranges (e.g., 1-3, 4-6):")
-        zip_filename = st.text_input("Enter the name for the output file without any extension:")
-        zip_filename=zip_filename.split('.')[0]
-        merge_checkbox = st.checkbox("Merge all ranges")
+        zip_filename = st.text_input("Enter the name for the output file without any extension:","output")
+        zip_filename = zip_filename.split('.')[0]
+        merge_checkbox = st.checkbox("Merge all ranges to form a single PDF")
 
         if page_ranges.strip() and zip_filename.strip():
             try:
