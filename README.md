@@ -16,4 +16,4 @@ to do: pdf summarizer, unlock pdf, protect pdf.
 
 must remove extension if entered in the textbox like in splitpdf.py
 
-use this prompt to clean the code `remove extra spaces and lines for better readability.`
+use this prompt to clean the code `in the above code remove all the comments, remove extra spaces and lines and make it better for readability.`
