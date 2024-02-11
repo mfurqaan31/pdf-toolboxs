@@ -1,27 +1,22 @@
+# using gemini pro llm
 import streamlit as st
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import os
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 import google.generativeai as genai
 from langchain_community.vectorstores import FAISS
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
-import atexit
-import shutil
-import requests
+import atexit,shutil,requests,os
 
 def check_encrypted(pdf_file_path):
     is_encrypted = False
     with open(pdf_file_path, 'rb') as pdf_file:
         pdf_reader = PdfReader(pdf_file)
         is_encrypted = pdf_reader.is_encrypted
-
     return is_encrypted
 
 def cleanup():
-    # Delete 'uploads' folder when the application exits
     shutil.rmtree("uploads", ignore_errors=True)
     shutil.rmtree("faiss_index", ignore_errors=True)
 
@@ -35,11 +30,9 @@ def get_pdf_text(pdf_docs):
 
 def get_text_chunks(text):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
-    chunks = text_splitter.split_text(text)
-    return chunks
+    return text_splitter.split_text(text)
 
 def get_vector_store(text_chunks, api_key):
-    
     if not text_chunks:
         st.error("No text chunks found, cannot process the PDF")
         st.stop()
@@ -53,14 +46,9 @@ def get_vector_store(text_chunks, api_key):
         st.stop()
 
 def is_valid_api_key(api_key):
-    headers = {
-        "Authorization": f"Bearer {api_key}"
-    }
+    headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.get("https://api.gemini.com/v1/symbols", headers=headers)
-    if response.status_code == 200:
-        return True
-    else:
-        return False
+    return response.status_code == 200
 
 def get_conversational_chain(api_key, temperature):
     genai.configure(api_key=api_key)
@@ -88,21 +76,17 @@ def user_input(user_question, api_key, temperature):
         st.write("Answer: ", response["output_text"])
 
 def main():
-    st.set_page_config("Chat PDF")
     st.header("Chat with PDF")
 
-    # Create an "uploads" folder if it doesn't exist
     if not os.path.exists("uploads"):
         os.makedirs("uploads")
 
     pdf_doc = st.file_uploader("Upload your PDF File", type=["pdf"])
     if pdf_doc:
-        # Save the uploaded PDF to the uploads folder
         pdf_path = os.path.join("uploads", pdf_doc.name)
         with open(pdf_path, "wb") as f:
             f.write(pdf_doc.getvalue())
 
-        # Check if the uploaded PDF is encrypted
         if check_encrypted(pdf_path):
             st.error("The selected PDF is encrypted. Cannot process it.")
             st.stop()
@@ -122,10 +106,10 @@ def main():
                     if user_question:
                         user_input(user_question, api_key, temperature)
                 else:
-                    st.error("Invalid Gemini API Key. Please check your API key or create a new one at [here](https://makersuite.google.com/app/apikey)")
+                    st.error("Invalid Gemini API Key. Please check your API key or if you do not have generate a new one from [here](https://makersuite.google.com/app/apikey)")
                     st.stop()
             else:
-                st.error("Please enter your Gemini API Key")
+                st.error("Please enter your Gemini API Key, if you do not have generate a new one from [here](https://makersuite.google.com/app/apikey)")
 
 if __name__ == "__main__":
     atexit.register(cleanup)
