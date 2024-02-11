@@ -1,3 +1,4 @@
+# main code
 import streamlit as st
 import fitz
 from PIL import Image
@@ -35,11 +36,9 @@ def convert_pdf_to_zip(pdf_file_path):
                 image_data = image_bytes.getvalue()
                 zip_file.writestr(image_filename, image_data)
 
-    # Return the bytes of the generated ZIP file
     return zip_buffer.getvalue()
 
-def remove_uploads_folder():
-    # Remove the "uploads" folder when the program exits
+def cleanup():
     shutil.rmtree("uploads", ignore_errors=True)
 
 def main():
@@ -58,15 +57,13 @@ def main():
 
         zip_filename = st.text_input("Enter the ZIP file name (without extension):", "output", key="zip_filename")
 
-        # Check if the user has selected a PDF and entered a ZIP file name
         if uploaded_file and zip_filename:
-            zip_filename = zip_filename.strip()  # Remove leading/trailing spaces
+            zip_filename = zip_filename.strip()
+            zip_filename = zip_filename.split('.')[0]
 
-            # Add ".zip" extension if not provided
             if not zip_filename.endswith(".zip"):
                 zip_filename += ".zip"
 
-            # Trigger the conversion when the button is clicked
             if st.button("Convert to ZIP"):
                 st.success(f"The PDF has been converted to images, and the ZIP file is ready for Download.")
                 zip_data = convert_pdf_to_zip(pdf_file_path)
@@ -78,6 +75,5 @@ def main():
                 )
 
 if __name__ == "__main__":
-    # Register the function to remove "uploads" folder when the program exits
-    atexit.register(remove_uploads_folder)
+    atexit.register(cleanup)
     main()
