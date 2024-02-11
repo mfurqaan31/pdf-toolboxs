@@ -84,7 +84,7 @@ def main():
                         if merge_checkbox:
                             merged_pdf_bytes = merge_pdfs(split_pdfs)
                             st.success(f"The PDFs have been merged, and the PDF is ready for Download.")
-                            st.download_button(label=f"Download {zip_filename}.pdf", data=merged_pdf_bytes.getvalue(), file_name=f"{zip_filename}.pdf")
+                            st.download_button(label=f"Download PDF", data=merged_pdf_bytes.getvalue(), file_name=f"{zip_filename}.pdf")
                         else:
                             zip_filename_with_extension = os.path.join("uploads", f"{zip_filename}.zip")
                             with zipfile.ZipFile(zip_filename_with_extension, 'w') as zip_file:
@@ -93,7 +93,7 @@ def main():
                                     zip_file.writestr(pdf_filename, pdf_bytes.getvalue())
 
                             st.success(f"The PDFs have been split, and the ZIP file is ready for Download.")
-                            st.download_button(label=f"Download {zip_filename}.zip", data=open(zip_filename_with_extension, 'rb').read(), file_name=f"{zip_filename}.zip")
+                            st.download_button(label=f"Download ZIP", data=open(zip_filename_with_extension, 'rb').read(), file_name=f"{zip_filename}.zip")
 
                 else:
                     st.warning("Invalid page range. Make sure all ranges are in the correct format and within the total number of pages.")
