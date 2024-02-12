@@ -3,11 +3,10 @@ import streamlit as st
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-import google.generativeai as genai
 from langchain_community.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
-import atexit,shutil,requests,os
+import atexit, shutil, requests, os
 
 def check_encrypted(pdf_file_path):
     is_encrypted = False
@@ -51,7 +50,6 @@ def is_valid_api_key(api_key):
     return response.status_code == 200
 
 def get_conversational_chain(api_key, temperature):
-    genai.configure(api_key=api_key)
     prompt_template = """
     Answer the question as detailed as possible from the provided context, make sure to provide all the details, if the answer is not in
     provided context just say, "answer is not available in the context", don't provide the wrong answer\n\n
@@ -65,8 +63,7 @@ def get_conversational_chain(api_key, temperature):
     chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
     return chain
 
-def user_input(user_question, api_key, temperature):
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
+def user_input(user_question, api_key, temperature, embeddings):
     new_db = FAISS.load_local("faiss_index", embeddings)
     docs = new_db.similarity_search(user_question)
     chain = get_conversational_chain(api_key, temperature)
@@ -97,14 +94,21 @@ def main():
             api_key = st.text_input("Enter your Gemini API Key")
             if api_key:
                 if is_valid_api_key(api_key):
+                    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
                     get_vector_store(text_chunks, api_key)
                     st.success("PDF Processed Successfully")
-                    
-                    user_question = st.chat_input("Ask your question")
                     temperature = st.slider("Select Gemini LLM temperature", 0.0, 1.0, 0.3, 0.1)
+                    st.write("Ask your question")
+                    user_question = st.text_area("Enter your question here", "", height=200)
+                    
+                    generate_button = st.button("Generate Answer")
 
-                    if user_question:
-                        user_input(user_question, api_key, temperature)
+                    if generate_button:
+                        if user_question:
+                            user_input(user_question, api_key, temperature, embeddings)
+                        else:
+                            st.warning("Please enter a question.")
+
                 else:
                     st.error("Invalid Gemini API Key. Please check your API key or if you do not have generate a new one from [here](https://makersuite.google.com/app/apikey)")
                     st.stop()
