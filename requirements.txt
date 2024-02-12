@@ -13,3 +13,4 @@ termcolor
 pyfiglet
 pycryptodome
 streamlit-option-menu
+langchain
