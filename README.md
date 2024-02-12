@@ -1,19 +1,24 @@
-# pdf-tools
+# pdf-toolboxz
 
-Streamlit web-app
+### Description:
 
-the code which needs 1 pdf must accept only 1 pdf.
+This application provides various tools for manipulating PDF files:
 
-check if encrypted.
+- **View PDF**: Upload a single PDF and the pages of the PDF will be displayed on the screen. Please ensure the PDF is not encrypted.
 
-all must take filename from user and without any extensions.
+- **Merge PDF**: Upload multiple PDFs and arrange their order in the select box. The uploaded PDFs will be merged according to the selected order. Please ensure that none of the PDFs are encrypted.
 
-do not use class and all function must be outside main.
+- **Split PDF**: Upload a single PDF, split its pages into ranges, and download the resulting ZIP file containing the split PDF ranges, or merge the ranges into a single PDF. Please ensure the PDF is not encrypted.
 
-deploy of azure.
+- **PDF to Images**: Upload a single PDF, and its pages will be converted to images and available for download as a ZIP file. Please ensure the PDF is not encrypted.
 
-to do: pdf summarizer, unlock pdf, protect pdf.
+- **Images to PDF**: Upload multiple images, arrange their order in the select box, and merge them into a single PDF.
 
-must remove extension if entered in the textbox like in splitpdf.py
+- **Encrypt PDF**: Upload a single non-encrypted PDF and add a password to protect it. Please ensure the PDF is not already encrypted.
 
-use this prompt to clean the code `in the above code remove all the comments, remove extra spaces and lines and make it better for readability.`
+- **Decrypt PDF**: Upload a single encrypted PDF, enter the password, and download the decrypted PDF. Please ensure the PDF is encrypted.
+
+- **Chat with PDF**: Upload a single non-encrypted PDF, enter your valid Gemini-pro API key, and ask questions related to the PDF in the chat input. You will receive answers accordingly.
+
+# Follow me and Star ⭐ the Repository
+[![GitHub](https://img.shields.io/badge/GitHub-mfurqaan31-black?&logo=github)](https://github.com/mfurqaan31)
