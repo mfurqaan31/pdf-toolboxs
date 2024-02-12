@@ -53,7 +53,7 @@ def merge_pdfs(split_pdfs):
     return merged_pdf_bytes
 
 def main():
-    st.title("PDF Page Splitter")
+    st.title("PDF Page Splitter ✂️")
 
     uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 

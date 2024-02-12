@@ -76,7 +76,7 @@ def user_input(user_question, api_key, temperature):
         st.write("Answer: ", response["output_text"])
 
 def main():
-    st.header("Chat with PDF")
+    st.header("Chat with PDF 💬")
 
     if not os.path.exists("uploads"):
         os.makedirs("uploads")

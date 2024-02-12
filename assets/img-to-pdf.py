@@ -73,7 +73,7 @@ def convert_images_to_pdf(image_paths, output_pdf_path, page_size=(800, 600)):
     pdf_canvas.save()
 
 def main():
-    st.title("Images to PDF")
+    st.title("Images to PDF converter 📄")
     uploaded_images = st.file_uploader("Upload Images", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
     if uploaded_images:

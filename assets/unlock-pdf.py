@@ -38,7 +38,7 @@ def decryption(password, file_path, output_name):
             st.error("Incorrect password. Please try again.")
 
 def main():
-    st.title("PDF Decrypter")
+    st.title("PDF Decrypter 🔓")
     uploaded_file = st.file_uploader("Choose an encrypted PDF file", type="pdf")
     if uploaded_file:
         pdf_file_path = os.path.join("uploads", uploaded_file.name)

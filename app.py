@@ -5,16 +5,16 @@ import atexit,shutil
 def cleanup():
     shutil.rmtree("uploads", ignore_errors=True)
     shutil.rmtree("faiss_index", ignore_errors=True)
-    shutil.rmtree("./others/uploads", ignore_errors=True)
-    shutil.rmtree("./others/faiss_index", ignore_errors=True)
-    shutil.rmtree("./others/__pycache__", ignore_errors=True)
+    shutil.rmtree("./assets/uploads", ignore_errors=True)
+    shutil.rmtree("./assets/faiss_index", ignore_errors=True)
+    shutil.rmtree("./assets/__pycache__", ignore_errors=True)
 
 def main():
-    st.markdown("### Introduction to PDF Toolboxz")
+    st.title("PDF Toolboxz 📄 🛠")
     
-    st.sidebar.title('Tools')
+    st.sidebar.title('PDF Tools')
 
-    page = st.sidebar.radio('Go to', ['Home','View PDF','Merge PDF', 'Split PDF', 'Image to PDF', 'PDF to Image', 'Lock PDF', 'Unlock PDF','Chat with PDF'])
+    page = st.sidebar.radio('Navigate', ['Home','View PDF','Merge PDF', 'Split PDF', 'PDF to Images', 'Images to PDF', 'Encrypt PDF', 'Decrypt PDF','Chat with PDF'])
 
     if page == 'Home':
         home = import_module('home')
@@ -32,19 +32,19 @@ def main():
         split_pdf = import_module('split-pdf')
         split_pdf.main()
 
-    elif page == 'Image to PDF':
+    elif page == 'Images to PDF':
         img_pdf = import_module('img-to-pdf')
         img_pdf.main()
 
-    elif page == 'PDF to Image':
+    elif page == 'PDF to Images':
         pdf_pdf = import_module('pdf-to-img')
         pdf_pdf.main()
 
-    elif page == 'Lock PDF':
+    elif page == 'Encrypt PDF':
         lock_pdf = import_module('lock-pdf')
         lock_pdf.main()
 
-    elif page == 'Unlock PDF':
+    elif page == 'Decrypt PDF':
         unlock_pdf = import_module('unlock-pdf')
         unlock_pdf.main()
 

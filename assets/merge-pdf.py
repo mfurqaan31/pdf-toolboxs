@@ -76,7 +76,7 @@ def save_uploaded_files(uploaded_files):
     return uploaded_paths
 
 def main():
-    st.title("Merge PDFs")
+    st.title("PDF Merger")
 
     uploaded_files = st.file_uploader("Add PDF files", type="pdf", accept_multiple_files=True)
 

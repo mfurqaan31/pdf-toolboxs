@@ -36,7 +36,7 @@ def encryption(password, file_path, output_name):
     )
 
 def main():
-    st.title("PDF Encrypter")
+    st.title("PDF Encrypter 🔒")
     uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
     if uploaded_file:
         pdf_file_path = os.path.join("uploads", uploaded_file.name)

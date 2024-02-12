@@ -42,7 +42,7 @@ def cleanup():
     shutil.rmtree("uploads", ignore_errors=True)
 
 def main():
-    st.title("PDF to Image Converter")
+    st.title("PDF to Image Converter 🖼️")
 
     uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 

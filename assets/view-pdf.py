@@ -33,7 +33,7 @@ def display_pdf_page(uploaded_file, page_number):
             st.write("Error converting PDF to image.")
 
 def main():
-    st.title("View your PDF")
+    st.title("PDF Viewer 🔎")
     if not os.path.exists("uploads"):
         os.makedirs("uploads")
 
