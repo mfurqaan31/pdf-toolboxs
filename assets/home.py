@@ -24,7 +24,7 @@ def main():
             - Chat with PDF: Upload a single non-encrypted PDF, enter your valid Gemini-pro API key, and ask questions related to the PDF in the chat input. You will receive answers accordingly.
             """)
 
-    st.write("Developed my Mohammed Furqaan")
+    st.write("Developed by Mohammed Furqaan")
 
 if __name__=="__main__":
     main()
