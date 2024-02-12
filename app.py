@@ -11,7 +11,7 @@ def cleanup():
 
 def main():
     st.set_page_config("pdf-toolboxz")
-    st.title("PDF Toolboxz 📄 🛠")
+    st.title("PDF Toolboxz 📄🛠")
     
     st.sidebar.title('PDF Tools')
 
