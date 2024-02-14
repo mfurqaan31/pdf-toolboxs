@@ -21,7 +21,7 @@ def main():
 
             - Decrypt PDF: Upload a single encrypted PDF, enter the password, and download the decrypted PDF. Please ensure the PDF is encrypted.
 
-            - Chat with PDF: Upload a single non-encrypted PDF, enter your valid Gemini-pro API key, and ask questions related to the PDF in the chat input. You will receive answers accordingly.
+            - Chat with PDF: Upload a single non-encrypted PDF, enter your valid Gemini-pro API key, and ask questions related to the PDF in the chat input. You will receive answers accordingly. Note: This tool is currently under development, and its outputs may not always be accurate.
             """)
 
     st.write("Developed by Mohammed Furqaan")
