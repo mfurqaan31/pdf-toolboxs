@@ -20,5 +20,5 @@ This application provides various tools for manipulating PDF files:
 
 - **Chat with PDF**: Upload a single non-encrypted PDF, enter your valid Gemini-pro API key, and ask questions related to the PDF in the chat input. Note: This tool is currently under development, and its outputs may not always be accurate.
 
-# Follow me and Star ⭐ the Repository
+## Follow me and Star ⭐ the Repository
 [![GitHub](https://img.shields.io/badge/GitHub-mfurqaan31-black?&logo=github)](https://github.com/mfurqaan31)
