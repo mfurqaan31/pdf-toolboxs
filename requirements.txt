@@ -8,7 +8,7 @@ reportlab
 google-generativeai
 faiss-cpu
 langchain-google-genai
-langchain-community
+langchain-community==0.0.26
 termcolor
 pyfiglet
 pycryptodome
