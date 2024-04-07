@@ -1,12 +1,14 @@
-# using gemini pro llm
+# using multiple models for LLM
 import streamlit as st
 from PyPDF2 import PdfReader
+import PyPDF2
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.vectorstores import FAISS
-from langchain.chains.question_answering import load_qa_chain
-from langchain.prompts import PromptTemplate
-import atexit, shutil, requests, os
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ChatMessageHistory, ConversationBufferMemory
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_groq import ChatGroq
+import atexit, shutil, os
 
 def check_encrypted(pdf_file_path):
     is_encrypted = False
@@ -17,104 +19,82 @@ def check_encrypted(pdf_file_path):
 
 def cleanup():
     shutil.rmtree("uploads", ignore_errors=True)
-    shutil.rmtree("faiss_index", ignore_errors=True)
 
-def get_pdf_text(pdf_docs):
-    text = ""
-    for pdf in pdf_docs:
-        with open(pdf, 'rb') as f:
-            pdf_reader = PdfReader(f)
-            for page in pdf_reader.pages:
-                text += page.extract_text()
-    return text
-
-def get_text_chunks(text):
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
-    return text_splitter.split_text(text)
-
-def get_vector_store(text_chunks, api_key):
-    if not text_chunks:
-        st.error("No text chunks found, cannot process the PDF")
-        st.stop()
-
-    try:
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
-        vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
-        vector_store.save_local("faiss_index")
-    except Exception as e:
-        st.error(f"Error processing PDF: {str(e)}. If you do not have an API key, generate it from [here](https://makersuite.google.com/app/apikey)")
-        st.stop()
-
-def is_valid_api_key(api_key):
-    headers = {"Authorization": f"Bearer {api_key}"}
-    response = requests.get("https://api.gemini.com/v1/symbols", headers=headers)
-    return response.status_code == 200
-
-def get_conversational_chain(api_key, temperature):
-    prompt_template = """
-    Answer the question as detailed as possible from the provided context, make sure to provide all the details, if the answer is not in
-    provided context just say, "answer is not available in the context", don't provide the wrong answer\n\n
-    Context:\n {context}?\n
-    Question: \n{question}\n
-    Answer:
-    """
-
-    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=temperature, google_api_key=api_key)
-    prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
-    chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
+def process_pdf_and_initialize_chatbot(uploaded_file, slider,model):
+    with st.spinner("Processing the pdf..."):
+        pdf_text = ""
+        pdf_reader = PyPDF2.PdfReader(uploaded_file)
+        
+        for page in pdf_reader.pages:
+            pdf_text += page.extract_text()
+        
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=50)
+        Texts = text_splitter.split_text(pdf_text)
+        
+        metadatas = [{"source": f"{i}-pl"} for i in range(len(Texts))]
+        
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001",google_api_key=st.secrets["GOOGLE_API_KEY"])       
+        
+        docsearch = FAISS.from_texts(Texts, embeddings, metadatas=metadatas)
+        
+        message_history = ChatMessageHistory()
+        
+        memory = ConversationBufferMemory(
+            memory_key="chat_history",
+            output_key="answer",
+            chat_memory=message_history,
+            return_messages=True,
+        )
+    
+        llm_groq = ChatGroq(
+            groq_api_key=st.secrets["GROQ_API_KEY"], 
+            model_name=model,
+            temperature=slider
+        )
+        
+        chain = ConversationalRetrievalChain.from_llm(
+            llm=llm_groq,
+            chain_type="stuff",
+            retriever=docsearch.as_retriever(),
+            memory=memory,
+            return_source_documents=True,
+        )
+    
+    st.success("PDF Processed Successfully generating the answer...")
     return chain
-
-def user_input(user_question, api_key, temperature, embeddings):
-    new_db = FAISS.load_local("faiss_index", embeddings)
-    docs = new_db.similarity_search(user_question)
-    chain = get_conversational_chain(api_key, temperature)
-    st.write("Question: ", user_question)
-    with st.spinner("Generating the answer..."):
-        response = chain.invoke({"input_documents": docs, "question": user_question}, return_only_outputs=True)
-        st.write("Answer: ", response["output_text"])
+    
 
 def main():
     st.header("Chat with PDF 💬")
-
+    
     if not os.path.exists("uploads"):
         os.makedirs("uploads")
+        
+    uploaded_file = st.file_uploader("Please upload a PDF file to begin!", type=["pdf"])
 
-    pdf_doc = st.file_uploader("Upload your PDF File", type=["pdf"])
-    if pdf_doc:
-        pdf_path = os.path.join("uploads", pdf_doc.name)
+    if uploaded_file:
+        pdf_path = os.path.join("uploads", uploaded_file.name)
         with open(pdf_path, "wb") as f:
-            f.write(pdf_doc.getvalue())
-
+            f.write(uploaded_file.getvalue())
+        
         if check_encrypted(pdf_path):
             st.error("The selected PDF is encrypted. Cannot process it.")
             st.stop()
-
-        with st.spinner("Processing..."):
-            raw_text = get_pdf_text([pdf_path])
-            text_chunks = get_text_chunks(raw_text)
-            api_key = st.text_input("Enter your Gemini API Key")
-            if api_key:
-                if is_valid_api_key(api_key):
-                    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
-                    get_vector_store(text_chunks, api_key)
-                    st.success("PDF Processed Successfully")
-                    temperature = st.slider("Select Gemini LLM temperature", 0.0, 1.0, 0.3, 0.1)
-                    st.write("Ask your question")
-                    user_question = st.text_area("Enter your question here", "", height=200)
-                    
-                    generate_button = st.button("Generate Answer")
-
-                    if generate_button:
-                        if user_question:
-                            user_input(user_question, api_key, temperature, embeddings)
-                        else:
-                            st.warning("Please enter a question.")
-
-                else:
-                    st.error("Invalid Gemini API Key. Please check your API key or if you do not have generate a new one from [here](https://makersuite.google.com/app/apikey)")
-                    st.stop()
-            else:
-                st.error("Please enter your Gemini API Key, if you do not have generate a new one from [here](https://makersuite.google.com/app/apikey)")
+        
+        llm_options=["llama2-70b-4096", "mixtral-8x7b-32768"]
+        model=st.selectbox("Select the LLM model", llm_options,index=0)
+        
+        slider = st.slider("Select LLM temperature", 0.0, 1.0, 0.3, 0.1)
+        
+        user_question = st.chat_input("Ask your question here:")
+        
+        if user_question:
+            chain = process_pdf_and_initialize_chatbot(pdf_path, slider,model)
+            res = chain.invoke(user_question)
+            answer = res["answer"]
+            source_documents = res["source_documents"]
+            st.write("Question:", user_question)
+            st.write("Answer:", answer)
 
 if __name__ == "__main__":
     atexit.register(cleanup)
