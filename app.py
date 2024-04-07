@@ -10,8 +10,8 @@ def cleanup():
     shutil.rmtree("./assets/__pycache__", ignore_errors=True)
 
 def main():
-    st.set_page_config("pdf-toolboxz")
-    st.title("PDF Toolboxz 📄🛠")
+    st.set_page_config("pdf-toolboxs")
+    st.title("PDF Toolboxs 📄🛠")
     
     st.sidebar.title('PDF Tools')
 
