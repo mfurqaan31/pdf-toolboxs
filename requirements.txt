@@ -7,10 +7,12 @@ pypdf2
 reportlab
 google-generativeai
 faiss-cpu
-langchain-google-genai
-langchain-community==0.0.26
+langchain-community
 termcolor
 pyfiglet
 pycryptodome
 streamlit-option-menu
 langchain
+langchain-community
+langchain-google-genai
+langchain-groq
