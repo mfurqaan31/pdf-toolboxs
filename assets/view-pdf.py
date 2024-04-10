@@ -7,6 +7,7 @@ import os
 from streamlit_pdf_viewer import pdf_viewer
 import shutil
 import PyPDF2
+import atexit
 
 def cleanup():
     shutil.rmtree("uploads", ignore_errors=True)
@@ -36,10 +37,7 @@ def main():
 
         check_encrypted(file_path)
 
-        st.session_state.pdf_ref = pdf_file  # Backup the uploaded PDF reference
-
-    if st.session_state.pdf_ref:
-        binary_data = st.session_state.pdf_ref.getvalue()
+        binary_data = open(file_path, 'rb').read()
         pdf_stream = BytesIO(binary_data)
         pdf_reader = PdfReader(pdf_stream)
 
