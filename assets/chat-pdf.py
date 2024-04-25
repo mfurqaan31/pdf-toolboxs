@@ -81,7 +81,7 @@ def main():
             st.error("The selected PDF is encrypted. Cannot process it.")
             st.stop()
         
-        llm_options=["llama2-70b-4096", "mixtral-8x7b-32768"]
+        llm_options=[ "mixtral-8x7b-32768","llama3-70b-8192","llama2-70b-4096","gemma-7b-it"]
         model=st.selectbox("Select the LLM model", llm_options,index=0)
         
         slider = st.slider("Select LLM temperature", 0.0, 1.0, 0.3, 0.1)
@@ -89,12 +89,20 @@ def main():
         user_question = st.chat_input("Ask your question here:")
         
         if user_question:
-            chain = process_pdf_and_initialize_chatbot(pdf_path, slider,model)
-            res = chain.invoke(user_question)
-            answer = res["answer"]
-            source_documents = res["source_documents"]
-            st.write("Question:", user_question)
-            st.write("Answer:", answer)
+            try:
+                chain = process_pdf_and_initialize_chatbot(pdf_path, slider, model)
+                res = chain.invoke(user_question)
+                answer = res["answer"]
+                #source_documents = res["source_documents"]
+                st.write("Question:", user_question)
+                st.write("Answer:", answer)
+            
+            except Exception as e:
+                if "model_not_active" in str(e):
+                    st.error("The selected LLM model is not active. Please choose a different model.")
+                    
+                else:
+                    st.error(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     atexit.register(cleanup)
