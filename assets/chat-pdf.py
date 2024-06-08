@@ -6,7 +6,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ChatMessageHistory, ConversationBufferMemory
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.embeddings import FakeEmbeddings
 from langchain_groq import ChatGroq
 import atexit, shutil, os
 
@@ -33,7 +33,7 @@ def process_pdf_and_initialize_chatbot(uploaded_file, slider,model):
         
         metadatas = [{"source": f"{i}-pl"} for i in range(len(Texts))]
         
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001",google_api_key=st.secrets["GOOGLE_API_KEY"])       
+        embeddings = FakeEmbeddings(size=1352)
         
         docsearch = FAISS.from_texts(Texts, embeddings, metadatas=metadatas)
         
@@ -81,7 +81,7 @@ def main():
             st.error("The selected PDF is encrypted. Cannot process it.")
             st.stop()
         
-        llm_options=[ "mixtral-8x7b-32768","llama3-70b-8192","llama2-70b-4096","gemma-7b-it"]
+        llm_options=["llama3-70b-8192","mixtral-8x7b-32768","gemma-7b-it"]
         model=st.selectbox("Select the LLM model", llm_options,index=0)
         
         slider = st.slider("Select LLM temperature", 0.0, 1.0, 0.3, 0.1)
