@@ -17,3 +17,5 @@ langchain-community
 langchain-google-genai
 langchain-groq
 streamlit_pdf_viewer
+pyheif
+pillow-heif
