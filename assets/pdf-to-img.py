@@ -19,20 +19,20 @@ def check_encrypted(pdf_file_path):
         st.error("The selected PDF is encrypted. Cannot convert to images.")
         st.stop()
 
-def convert_pdf_to_zip(pdf_file_path):
+def convert_pdf_to_zip(pdf_file_path, dpi=300):
     pdf_document = fitz.open(pdf_file_path)
 
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
         for page_number in range(len(pdf_document)):
-            page = pdf_document[page_number]
-            image_list = page.get_pixmap()
+            page = pdf_document.load_page(page_number)
+            pix = page.get_pixmap(dpi=dpi)
 
-            pil_image = Image.frombytes("RGB", [image_list.width, image_list.height], image_list.samples)
+            pil_image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
 
             image_filename = f"page_{page_number + 1}.png"
             with BytesIO() as image_bytes:
-                pil_image.save(image_bytes, format="PNG")
+                pil_image.save(image_bytes, format="PNG", quality=95)
                 image_data = image_bytes.getvalue()
                 zip_file.writestr(image_filename, image_data)
 
@@ -42,7 +42,7 @@ def cleanup():
     shutil.rmtree("uploads", ignore_errors=True)
 
 def main():
-    st.title("PDF to Image Converter 🖼️")
+    st.title("PDF to Image Converter")
 
     uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
@@ -66,7 +66,7 @@ def main():
 
             if st.button("Convert to ZIP"):
                 st.success(f"The PDF has been converted to images, and the ZIP file is ready for Download.")
-                zip_data = convert_pdf_to_zip(pdf_file_path)
+                zip_data = convert_pdf_to_zip(pdf_file_path, dpi=300)
                 st.download_button(
                     label="Download ZIP",
                     data=zip_data,
