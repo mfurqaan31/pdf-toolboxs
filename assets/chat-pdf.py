@@ -6,7 +6,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ChatMessageHistory, ConversationBufferMemory
-from langchain_community.embeddings import FakeEmbeddings
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain_groq import ChatGroq
 import atexit, shutil, os
 
@@ -20,7 +20,7 @@ def check_encrypted(pdf_file_path):
 def cleanup():
     shutil.rmtree("uploads", ignore_errors=True)
 
-def process_pdf_and_initialize_chatbot(uploaded_file, slider,model):
+def process_pdf_and_initialize_chatbot(uploaded_file, slider, llm_model, embd_model):
     with st.spinner("Processing the pdf..."):
         pdf_text = ""
         pdf_reader = PyPDF2.PdfReader(uploaded_file)
@@ -28,14 +28,12 @@ def process_pdf_and_initialize_chatbot(uploaded_file, slider,model):
         for page in pdf_reader.pages:
             pdf_text += page.extract_text()
         
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=50)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200)
         Texts = text_splitter.split_text(pdf_text)
         
-        metadatas = [{"source": f"{i}-pl"} for i in range(len(Texts))]
+        embeddings = HuggingFaceInferenceAPIEmbeddings(api_key=st.secrets["HF_API_KEY"], model_name=embd_model)
         
-        embeddings = FakeEmbeddings(size=1352)
-        
-        docsearch = FAISS.from_texts(Texts, embeddings, metadatas=metadatas)
+        docsearch = FAISS.from_texts(Texts, embeddings)
         
         message_history = ChatMessageHistory()
         
@@ -46,14 +44,14 @@ def process_pdf_and_initialize_chatbot(uploaded_file, slider,model):
             return_messages=True,
         )
     
-        llm_groq = ChatGroq(
-            groq_api_key=st.secrets["GROQ_API_KEY"], 
-            model_name=model,
+        groq_ai = ChatGroq(
+            groq_api_key=st.secrets["GROQ_API_KEY"],
+            model_name=llm_model,
             temperature=slider
         )
         
         chain = ConversationalRetrievalChain.from_llm(
-            llm=llm_groq,
+            llm=groq_ai,
             chain_type="stuff",
             retriever=docsearch.as_retriever(),
             memory=memory,
@@ -70,7 +68,7 @@ def main():
     if not os.path.exists("uploads"):
         os.makedirs("uploads")
         
-    uploaded_file = st.file_uploader("Please upload a PDF file to begin!", type=["pdf"])
+    uploaded_file = st.file_uploader("Please upload a PDF file to begin!", type="pdf")
 
     if uploaded_file:
         pdf_path = os.path.join("uploads", uploaded_file.name)
@@ -81,8 +79,19 @@ def main():
             st.error("The selected PDF is encrypted. Cannot process it.")
             st.stop()
         
-        llm_options=["llama3-70b-8192","mixtral-8x7b-32768","gemma-7b-it"]
-        model=st.selectbox("Select the LLM model", llm_options,index=0)
+        llm_options = ["llama3-8b-8192",
+                       "gemma-7b-it",
+                       "mixtral-8x7b-32768",
+                       "llama3-70b-8192"]
+        llm_model = st.selectbox("Select the LLM model", llm_options, index=0)
+        
+        embd_options=["BAAI/bge-base-en-v1.5",
+                      "BAAI/bge-large-en-v1.5",
+                      "WhereIsAI/UAE-Large-V1",
+                      "mixedbread-ai/mxbai-embed-large-v1",
+                      "mixedbread-ai/mxbai-embed-2d-large-v1"]
+        embd_model = st.selectbox("Select the Embedding  model", embd_options, index=0)
+        
         
         slider = st.slider("Select LLM temperature", 0.0, 1.0, 0.3, 0.1)
         
@@ -90,13 +99,11 @@ def main():
         
         if user_question:
             try:
-                chain = process_pdf_and_initialize_chatbot(pdf_path, slider, model)
+                chain= process_pdf_and_initialize_chatbot(pdf_path, slider, llm_model, embd_model)
                 res = chain.invoke(user_question)
                 answer = res["answer"]
-                #source_documents = res["source_documents"]
                 st.write("Question:", user_question)
                 st.write("Answer:", answer)
-            
             except Exception as e:
                 if "model_not_active" in str(e):
                     st.error("The selected LLM model is not active. Please choose a different model.")
