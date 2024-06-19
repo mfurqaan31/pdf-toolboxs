@@ -21,7 +21,7 @@ def main():
 
             - Decrypt PDF: Upload a single encrypted PDF, enter the password, and download the decrypted PDF. Please ensure the PDF is encrypted.
 
-            - Chat with PDF: Upload a single non-encrypted PDF and ask questions related to the PDF in the chat input using any language model.
+            - Chat with PDF: Upload a single non-encrypted PDF and ask questions related to the PDF in the chat input using any language model and text embedding.
             """)
 
     st.write("Developed by Mohammed Furqaan")
