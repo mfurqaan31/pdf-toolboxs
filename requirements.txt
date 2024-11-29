@@ -19,3 +19,4 @@ langchain-groq
 streamlit_pdf_viewer
 pyheif
 pillow-heif
+httpx==0.27.2
