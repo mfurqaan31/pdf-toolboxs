@@ -1,14 +1,15 @@
-# using multiple models for LLM
+# Using multiple models for LLM
 import streamlit as st
 from PyPDF2 import PdfReader
 import PyPDF2
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain.chains import ConversationalRetrievalChain
-from langchain.memory import ChatMessageHistory, ConversationBufferMemory
-from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from langchain.memory import ConversationBufferMemory
+from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_groq import ChatGroq
 import atexit, shutil, os
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 def check_encrypted(pdf_file_path):
     is_encrypted = False
@@ -20,7 +21,7 @@ def check_encrypted(pdf_file_path):
 def cleanup():
     shutil.rmtree("uploads", ignore_errors=True)
 
-def process_pdf_and_initialize_chatbot(uploaded_file, slider, llm_model, embd_model):
+def process_pdf_and_initialize_chatbot(uploaded_file, slider, llm_model):
     with st.spinner("Processing the pdf..."):
         pdf_text = ""
         pdf_reader = PyPDF2.PdfReader(uploaded_file)
@@ -31,7 +32,7 @@ def process_pdf_and_initialize_chatbot(uploaded_file, slider, llm_model, embd_mo
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200)
         Texts = text_splitter.split_text(pdf_text)
         
-        embeddings = HuggingFaceInferenceAPIEmbeddings(api_key=st.secrets["HF_API_KEY"], model_name=embd_model)
+        embeddings = GoogleGenerativeAIEmbeddings(google_api_key=st.secrets["GEMINI_API_KEY"], model="models/text-embedding-004")
         
         docsearch = FAISS.from_texts(Texts, embeddings)
         
@@ -85,21 +86,13 @@ def main():
                        "llama3-70b-8192"]
         llm_model = st.selectbox("Select the LLM model", llm_options, index=0)
         
-        embd_options=["BAAI/bge-base-en-v1.5",
-                      "BAAI/bge-large-en-v1.5",
-                      "WhereIsAI/UAE-Large-V1",
-                      "mixedbread-ai/mxbai-embed-large-v1",
-                      "mixedbread-ai/mxbai-embed-2d-large-v1"]
-        embd_model = st.selectbox("Select the Embedding  model", embd_options, index=0)
-        
-        
         slider = st.slider("Select LLM temperature", 0.0, 1.0, 0.3, 0.1)
         
         user_question = st.chat_input("Ask your question here:")
         
         if user_question:
             try:
-                chain= process_pdf_and_initialize_chatbot(pdf_path, slider, llm_model, embd_model)
+                chain= process_pdf_and_initialize_chatbot(pdf_path, slider, llm_model)
                 res = chain.invoke(user_question)
                 answer = res["answer"]
                 st.write("Question:", user_question)
