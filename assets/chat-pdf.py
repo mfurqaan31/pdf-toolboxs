@@ -80,10 +80,10 @@ def main():
             st.error("The selected PDF is encrypted. Cannot process it.")
             st.stop()
         
-        llm_options = ["llama3-8b-8192",
-                       "gemma-7b-it",
-                       "mixtral-8x7b-32768",
-                       "llama3-70b-8192"]
+        llm_options = ["llama-3.1-8b-instant",
+                       "openai/gpt-oss-120b",
+                       "meta-llama/llama-guard-4-12b",
+                       "llama-3.3-70b-versatile"]
         llm_model = st.selectbox("Select the LLM model", llm_options, index=0)
         
         slider = st.slider("Select LLM temperature", 0.0, 1.0, 0.3, 0.1)
